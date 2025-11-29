@@ -1,4 +1,4 @@
 flask
 gunicorn
-supabase-py
+supabase
 pycryptodome
