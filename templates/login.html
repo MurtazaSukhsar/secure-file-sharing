@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Login | Secure Share{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-4">
+    <div class="auth-card p-4 text-light">
+      <h2 class="text-center mb-2" style="color:#60a5fa;">Welcome back</h2>
+      <p class="text-center mb-4 small" style="color:#9ca3af;">
+        Sign in to manage your encrypted files.
+      </p>
+    
+      <form action="/login" method="post">
+        <div class="mb-3">
+          <label class="form-label">Email address</label>
+          <input type="email" name="email" class="form-control" required />
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" required />
+        </div>
+        <div class="mb-3 text-end">
+          <a href="/forgot" class="small text-primary text-decoration-none">
+            Forgot password?
+          </a>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 mb-3">Login</button>
+      </form>
+
+      <p class="text-center small mb-0" style="color:#9ca3af;">
+        New here?
+        <a href="/signup" class="fw-semibold text-primary text-decoration-none">
+          Create an account
+        </a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

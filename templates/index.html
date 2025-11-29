@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | Secure Share{% endblock %}
+
+{% block content %}
+<div class="row g-4 justify-content-center">
+  <div class="col-12 px-4">
+
+    <div class="row g-4">
+      <div class="col-md-5 col-lg-5">
+        <div class="main-card p-4  text-light">
+          <h3 class="mb-3" style="color:#bfdbfe;">Upload File</h3>
+          <p class="small" style="color:#94a3b8;">
+            Files are encrypted with AES before leaving the server. Only you and
+            people with the share link (and optional password) can download.
+          </p>
+
+          {% if session.last_share_link %}
+            <div class="alert alert-info d-flex justify-content-between align-items-center mt-3">
+              <div>
+                <strong>Share link ready</strong><br>
+                <small class="text-muted">
+                  Click “Share” to copy the link to your clipboard.
+                </small>
+              </div>
+              <button type="button"
+                      class="btn btn-sm btn-primary"
+                      onclick="copyShareLink('{{ session.last_share_link }}')">
+                Share
+              </button>
+            </div>
+          {% endif %}
+
+          <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data" class="mt-4">
+            <input id="fileInput" type="file" name="file" class="d-none" required />
+
+            <div id="dropZone"
+                 class="border border-dashed rounded-3 p-4 mb-3 text-center"
+                 style="border-color:#1e40af; background:rgba(15,23,42,0.8); cursor:pointer;">
+              <p class="mb-1" style="color:#e5e7eb;">Drop a file here</p>
+              <p class="small mb-0" style="color:#9ca3af;">or click to browse</p>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Share password</label>
+              <input type="password" name="share_password" class="form-control"
+                     placeholder="Set a password for the share link" />
+            </div>
+            <button type="submit" class="btn btn-primary w-100">
+              Upload, encrypt & generate link
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-md-7 col-lg-7">
+        <div class="main-card p-4 h-100 text-light">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0" style="color:#bfdbfe;">Your Files</h3>
+          </div>
+
+          {% if files %}
+            <ul class="list-group list-group-flush">
+              {% for f in files %}
+                <li class="list-group-item d-flex justify-content-between align-items-center"
+                    style="background:transparent; border-color:#1e293b; color:#e5e7eb;">
+                  <div>
+                    <span class="me-2">📁</span>{{ f }}
+                  </div>
+                  <div class="d-flex gap-2">
+                    <a href="/download/{{ f }}" class="btn btn-sm btn-outline-primary">Download</a>
+                    <form action="/delete/{{ f }}" method="post"
+                          onsubmit="return confirm('Delete this file?');">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="small mb-0" style="color:#94a3b8;">You haven’t uploaded any files yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <p class="text-center small mt-4" style="color:#64748b;">
+      Built with ❤️ by <span style="color:#e5e7eb;">Murtaza Sukhsarwala</span>
+    </p>
+  </div>
+</div>
+
+<script>
+// copy share link
+function copyShareLink(link) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(function() {
+      alert("Share link copied to clipboard.");
+    }).catch(function() {
+      fallbackCopyText(link);
+    });
+  } else {
+    fallbackCopyText(link);
+  }
+}
+
+function fallbackCopyText(text) {
+  const temp = document.createElement('textarea');
+  temp.value = text;
+  document.body.appendChild(temp);
+  temp.select();
+  document.execCommand('copy');
+  document.body.removeChild(temp);
+  alert("Share link copied to clipboard.");
+}
+
+// drag & drop upload
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const uploadForm = document.getElementById('uploadForm');
+
+if (dropZone && fileInput && uploadForm) {
+  dropZone.addEventListener('click', () => fileInput.click());
+
+  ['dragenter', 'dragover'].forEach(evt => {
+    dropZone.addEventListener(evt, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.style.borderColor = '#38bdf8';
+      dropZone.style.background = 'rgba(15,23,42,0.95)';
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(evt => {
+    dropZone.addEventListener(evt, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.style.borderColor = '#1e40af';
+      dropZone.style.background = 'rgba(15,23,42,0.8)';
+    });
+  });
+
+  dropZone.addEventListener('drop', e => {
+    const files = e.dataTransfer.files;
+    if (!files || !files.length) return;
+    fileInput.files = files;
+  });
+}
+</script>
+{% endblock %}
