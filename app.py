@@ -217,6 +217,62 @@ def forgot_password():
 
     return render_template('forgot.html')
 
+from urllib.parse import urlparse, parse_qs
+
+@app.route('/reset', methods=['GET', 'POST'])
+def reset_password():
+    if request.method == 'GET':
+        # Just take whatever access_token comes from Supabase and show the form
+        access_token = request.args.get('access_token', '').strip()
+        return render_template('reset.html', access_token=access_token)
+
+    # POST: user submitted new password
+    password = request.form.get('password', '').strip()
+    password_confirm = request.form.get('password_confirm', '').strip()
+    access_token = request.form.get('access_token', '').strip()
+
+    if not password or not password_confirm:
+        flash("Please fill both password fields.", "danger")
+        return render_template('reset.html', access_token=access_token)
+
+    if password != password_confirm:
+        flash("Passwords do not match.", "danger")
+        return render_template('reset.html', access_token=access_token)
+
+    if not access_token:
+        flash("Reset link is invalid or expired. Please request a new one.", "danger")
+        return redirect(url_for('forgot_password'))
+
+    try:
+        # use the recovery access token to update the password
+        supabase.auth.set_session(access_token, None)  # temporary session
+        resp = supabase.auth.update_user({"password": password})  # [web:269]
+        if getattr(resp, "user", None) is None:
+            flash("Could not update password. Request a new reset link.", "danger")
+            return render_template('reset.html', access_token=access_token)
+    except Exception:
+        flash("Error updating password. The link may be expired.", "danger")
+        return render_template('reset.html', access_token=access_token)
+
+    flash("Password updated. Please log in with your new password.", "success")
+    return redirect(url_for('login'))
+
+
+
+    # Temporarily set the session with the access token, then call update_user
+    try:
+        supabase.auth.set_session(access_token, None)  # refresh_token not needed for one call
+        resp = supabase.auth.update_user({"password": password})  # [web:269]
+        if getattr(resp, "user", None) is None:
+            flash("Could not update password. Try requesting a new reset link.", "danger")
+            return render_template('reset.html', access_token=access_token)
+    except Exception:
+        flash("Error updating password. The link may be expired.", "danger")
+        return render_template('reset.html', access_token=access_token)
+
+    flash("Password updated. Please log in with your new password.", "success")
+    return redirect(url_for('login'))
+
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
