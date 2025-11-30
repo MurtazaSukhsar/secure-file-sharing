@@ -222,7 +222,7 @@ from urllib.parse import urlparse, parse_qs
 @app.route('/reset', methods=['GET', 'POST'])
 def reset_password():
     if request.method == 'GET':
-        # Just read the access_token sent by Supabase (may be empty if link is old)
+        # Whatever Supabase sends, just pass it into the form
         access_token = request.args.get('access_token', '').strip()
         return render_template('reset.html', access_token=access_token)
 
@@ -255,6 +255,7 @@ def reset_password():
 
     flash("Password updated. Please log in with your new password.", "success")
     return redirect(url_for('login'))
+
 
 
 
